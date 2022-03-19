@@ -1,0 +1,69 @@
+#!/bin/zsh
+
+e() { echo -e "\e[${1}m$2\e[0m"}
+columns() {
+  awk 'BEGIN{i=0;n=-1} {if($0  == "+++"){n=n<i?i:n;i=0} else {s[i]=s[i]$0;i++}} END{for(k=0;k<n;k++) print(s[k]) }'
+}
+
+
+cat <<EOF
+\e    \033    \x1B
+
+## Clear
+|  code   | mode    
+| ------  | ---------------------------
+| \e[`e '3;4;34' ' 0 '`J | to end of screen
+| \e[`e '3;4;34' ' 1 '`J | to start of screen
+| \e[`e '3;4;34' ' 2 '`J | clear creean, keep cursor
+| \e[`e '3;4;34' ' 3 '`J | clear screen, clear buffer 
+| \e[`e '3;4;34' ' 0 '`K | to end of line
+| \e[`e '3;4;34' ' 1 '`J | to start of line
+| \e[`e '3;4;34' ' 2 '`J | clrar line, keep  cursor
+
+
+## SGR Syntax
+  \e[`e '3;33' CODE1`;`e '3;33' CODE2...`m`e '4;32' ' TEXT '`\e[0m
+  \e[`e '3;33' 38/48`;2;`e '3;31' R`;`e '3;32' G`;`e '3;34' B`;m`e '4;38;2;255;255;255;48;2;102;204;255;' ' TEXT '`\e[0m
+
+## Styles & Cursor Move
+$(cat <<ROW | columns
+| code | style      |
+| ---- | ---------- |
+|   1  | `e   1 bold`       |
+|   2  | `e   2 timid`      |
+|   3  | `e   3 italic`     |
+|   4  | `e   4 underline`  |
+|   5  | `e   5 hello`      |
+|   6  | `e   6 world`      |
+|   7  | `e   7 rever`      |
+|   8  | `e   8 'hide?'`      |
+|   9  | `e   9 delete`     |
++++
+  code   | cursor  |
+ ------  | ------- |
+ \e[`e 33 '?25'`l | hide    |
+ \e[`e 33 '?25'`h | show    |
+ \e[`e '3;4;34' ' n '`A | up      |
+ \e[`e '3;4;34' ' n '`B | down    |
+ \e[`e '3;4;34' ' n '`C | right   |
+ \e[`e '3;4;34' ' n '`D | left    |
+ \e[`e '3;4;34' ' x '`G | to x    |
+ \e[`e '3;4;34' 'y;x'`H | to y,x  |
+ \e[`e '35' 's/u'`  | save/restore
+ROW
+)
+
+## Colors
+| color     | 30-37 | 40-47 | 90-97 | 100-107 
+| --------- | ----- | ----- | ----- | ----- |
+| 0 black   |`e 30 '(๑>؂<๑)'`|`e 40 '(๑>؂<๑)'`|`e 90 '(๑>؂<๑)' `|`e 100 '(๑>؂<๑)'`|
+| 1 red     |`e 31 '(๑>؂<๑)'`|`e 41 '(๑>؂<๑)'`|`e 91 '(๑>؂<๑)' `|`e 101 '(๑>؂<๑)'`|
+| 2 green   |`e 32 '(๑>؂<๑)'`|`e 42 '(๑>؂<๑)'`|`e 92 '(๑>؂<๑)' `|`e 102 '(๑>؂<๑)'`|
+| 3 yellow  |`e 33 '(๑>؂<๑)'`|`e 43 '(๑>؂<๑)'`|`e 93 '(๑>؂<๑)' `|`e 103 '(๑>؂<๑)'`|
+| 4 blue    |`e 34 '(๑>؂<๑)'`|`e 44 '(๑>؂<๑)'`|`e 94 '(๑>؂<๑)' `|`e 104 '(๑>؂<๑)'`|
+| 5 magenta |`e 35 '(๑>؂<๑)'`|`e 45 '(๑>؂<๑)'`|`e 95 '(๑>؂<๑)' `|`e 105 '(๑>؂<๑)'`|
+| 6 cyan    |`e 36 '(๑>؂<๑)'`|`e 46 '(๑>؂<๑)'`|`e 96 '(๑>؂<๑)' `|`e 106 '(๑>؂<๑)'`|
+| 7 white   |`e 37 '(๑>؂<๑)'`|`e 47 '(๑>؂<๑)'`|`e 97 '(๑>؂<๑)' `|`e 107 '(๑>؂<๑)'`|
+EOF
+unset e  columns
+
