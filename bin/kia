@@ -25,7 +25,7 @@ def kia(file:str,**opts):
         git('pull')
         git('add','.')
         git('commit','-m','sync')
-        git('push:')
+        git('push')
         
         return 
 
