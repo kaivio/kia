@@ -1,0 +1,77 @@
+#!/bin/python
+import os
+import subprocess
+from pathlib import Path
+from tempfile import mktemp
+from datetime import datetime
+import click
+
+def kia_dir(*rel_paths):
+    p = Path(Path.home(),'kia-project',*rel_paths)
+    p.parent.mkdir(exist_ok=True,parents=True)
+    return p
+
+
+@click.command()
+@click.argument('file',default='kia.md')
+@click.option('-l','--list', flag_value='.',is_flag=False)
+@click.option('--sync', is_flag=True)
+def kia(file:str,**opts):
+    if opts['list']:
+        print('TODO ...',opts['list'])
+        return 
+    
+    if opts['sync']:
+        git('pull')
+        git('add','.')
+        git('commit','-m','sync')
+        git('push:')
+        
+        return 
+
+    
+    t = datetime.now().ctime()
+    if file.startswith('kia'):
+        tf = mktemp(suffix='.md')
+        put(tf, f'-----------------------\n*{t}*\n\n_\n\n')
+    
+        mtime = os.stat(tf).st_mtime
+        click.edit(filename=tf)
+        if os.stat(tf).st_mtime > mtime:
+            content = cat(tf)
+            p = kia_dir(file)
+            with open(p,'a') as f:
+                f.write(content)
+                print('saved')
+        else:
+            print('unsave!')
+        os.remove(tf)
+    else:
+        click.edit(filename=kia_dir(file))
+
+def git(*args):
+    subprocess.run(['git','-C',str(kia_dir()),*args])
+
+
+def put(file, data):
+    try:
+        f = open(file,'w')
+        f.write(data)
+        f.close()
+    except Exception as e:
+        return e
+
+def cat(file):
+    try:
+        f = open(file)
+        data = f.read()
+        f.close()
+        return data
+    except:
+        return ''
+
+def main():
+    kia()
+
+if __name__ == "__main__":
+    main()
