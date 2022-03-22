@@ -133,15 +133,15 @@ endfunction
 - 函数名以`basename#funcname` 格式，可以小写
 - 首次被调用时才加载
 
-### 内置函数
+#### 内置函数
 - `:help function-list`
+- `expand()` 获取*当前状态*变量
+  - `%` 当前编辑文件
+  - `<sfile>` 当前脚本文件
+  - 当前函数名，所在行号，光标指向的文件名
+  - `:p` 后缀修饰表示绝对路径
+  - `:h` 后缀修饰表示只保留头部(多指目录)
 
-## 键映射
-```vim
-map {lhs} {rhs}
-```
-- map, nmap, imap, vmap,cmap, 
-- noremap, nore中缀，防止递归解析
 - omap()
 - umap, mapclear
 ### 特殊键
@@ -235,4 +235,7 @@ autocmd FileType vim
 - 事件列表 `:help autocmd-events`
 
 ## 异步
-- ':help job'
+- `:help job`
+
+## python 接口
+- `:help python-vim`
