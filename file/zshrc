@@ -1,0 +1,14 @@
+
+plugins=(
+  git
+  autojump
+  wd
+  vi-mode
+  path
+  burl
+)
+
+alias vi='nvim --noplugin -n'
+alias vim='nvim -n'
+
+#export TERM=screen-256color
