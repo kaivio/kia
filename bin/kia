@@ -117,7 +117,7 @@ def cp_r(p1, p2):
         put(p2,f1)
 
 
-        print(p1,'\033[35m➜\033[0m',p2)
+        print(trim_path(p1),'\033[35m➜\033[0m',trim_path(p2))
         print(f"    \033[32m{diff_label['+']}\033[31m{diff_label['-']}\033[0m")
 
         err = 0#put(p2,f1)
@@ -126,6 +126,13 @@ def cp_r(p1, p2):
     else:
         print(p1, 'not is file or dir')
 
+
+def trim_path(p):
+    p = str(p)
+    home = str(Path.home())
+    if p.startswith(home):
+        return '~'+p[len(home):]
+    return p
 
 def main():
     kia()
