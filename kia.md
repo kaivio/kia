@@ -44,7 +44,7 @@ kia~
 
 ```vim
 " hsv.s + 10%
-:K color s+10 
+:K color s+10
 
 
 ```
@@ -58,4 +58,9 @@ kia~
 *Fri Mar 25 16:22:24 2022*
 
  [copilot](https://copilot.github.com/#faqs) AI coding?
+
+-----------------------
+*Mon Mar 28 21:39:58 2022*
+
+还是标准库的`argpaser`好用
 

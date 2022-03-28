@@ -1,48 +1,44 @@
 #!/bin/python
-import os
+import os, sys
+import argparse
 import subprocess
 import difflib
 import math
 from pathlib import Path
 from tempfile import mktemp
 from datetime import datetime
-import click
+from random import randint
 
+import tty, termios
 
 def kia_dir(*rel_paths):
     p = Path(Path.home(),'kia-project',*rel_paths)
     p.parent.mkdir(exist_ok=True,parents=True)
     return p
 
+def kia():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--store',action='store_true')
+    parser.add_argument('-r', '--restore',action='store_true')
+    parser.add_argument('key',nargs='?',default="")
 
-@click.command()
-@click.argument('file',default='')
-@click.option('-l','--list', flag_value='.',is_flag=False)
-@click.option('-s','--store')
-@click.option('-r','--restore')
-@click.option('--sync', is_flag=True)
-def kia(file:str,**opts):
-    if opts['list']:
-        print('TODO ...',opts['list'])
-        return
+    opts, args = parser.parse_known_args()
+    key = opts.key
 
-    if opts['store']:
-        p1 = opts['store']
-        file = file or p1
+    if opts.store:
+        p1 = opts.key
+        file = args and args[0] or p1
         p2 = kia_dir('file',file)
         cp_r(p1, p2)
-
         return
-
-    if opts['restore']:
-        p1 = kia_dir('file',opts['restore'])
-        p2 = file or opts['restore']
+    if opts.restore:
+        p1 = kia_dir('file',key)
+        p2 = args and args[0] or key
         cp_r(p1, p2)
 
         return
 
-
-    if opts['sync']:
+    if key == 'sync':
         git('pull')
         git('add','.')
         git('commit','-m','sync')
@@ -50,25 +46,114 @@ def kia(file:str,**opts):
 
         return
 
-    file = file or 'kia.md'
-    t = datetime.now().ctime()
-    if file.startswith('kia'):
-        tf = mktemp(suffix='.md')
-        put(tf, f'-----------------------\n*{t}*\n\n_\n\n')
+    if key == '':
+        new_kia()
+        return
+    if key == 'cry':
+        new_cry()
+        return
 
-        mtime = os.stat(tf).st_mtime
-        click.edit(filename=tf)
-        if os.stat(tf).st_mtime > mtime:
-            content = cat(tf)
-            p = kia_dir(file)
-            with open(p,'a') as f:
-                f.write(content)
-                print('saved')
-        else:
-            print('unsave!')
-        os.remove(tf)
+    if key.startswith('cry/'):
+        file = kia_dir(key)
+        edit_cry(file)
+        return
+
+    if key == '-':
+        return
+
+
+    file = kia_dir(key)
+    edit(file)
+
+def edit_cry(file):
+    password = get_pw()
+    tf = kia_dir('.crying.md')
+    text = ''
+    with open(file,'rb') as f:
+        text = decry(f.read(),password)
+
+    put(tf,text)
+    mtime = os.stat(tf).st_mtime
+    edit(tf,'--noplugin','-n')
+
+    if os.stat(tf).st_mtime > mtime:
+        content =  cry(cat(tf),password)
+        with open(file,'wb') as f:
+            f.write(content)
+            print('changed! ')
+    os.remove(tf)
+
+
+def new_cry():
+    password = get_pw()
+    tf = kia_dir('.crying.md')
+    t = datetime.now()
+    if tf.exists():
+        pass
     else:
-        click.edit(filename=kia_dir(file))
+        put(tf,
+f'''-----------------------
+*{t.ctime()}*
+
+ _
+
+'''         )
+
+    mtime = os.stat(tf).st_mtime
+    edit(tf,'--noplugin','-n')
+
+    if os.stat(tf).st_mtime > mtime:
+        content =  cry(cat(tf),password)
+        p = kia_dir('cry/'+t.strftime('%Y%m%d_%H%M.o'))
+        with open(p,'wb') as f:
+            f.write(content)
+            print('saved')
+    else:
+        print('unsave!')
+    os.remove(tf)
+
+
+def new_kia():
+    tf = kia_dir('.kiaing.md')
+    if tf.exists():
+        pass
+    else:
+        t = datetime.now().ctime()
+        put(tf,
+f'''-----------------------
+*{t}*
+
+ _
+
+'''         )
+
+    mtime = os.stat(tf).st_mtime
+    edit(tf,'--noplugin','-n')
+
+    if os.stat(tf).st_mtime > mtime:
+        content = cat(tf)
+        p = kia_dir('kia.md')
+        with open(p,'a') as f:
+            f.write(content)
+            print('saved')
+    else:
+        print('unsave!')
+    os.remove(tf)
+
+def edit(file, *args):
+    try:
+        c = subprocess.run(['nvim',*args,file])
+        return c.returncode
+    except:
+        pass
+    try:
+        c = subprocess.run(['vim',*args,file])
+        return c.returncode
+    except:
+        pass
+
+    print('not call editor')
+    return 127
 
 def git(*args):
     subprocess.run(['git','-C',str(kia_dir()),*args])
@@ -134,8 +219,99 @@ def trim_path(p):
         return '~'+p[len(home):]
     return p
 
+
+
+
+# AES-256-CBC size(32LE), iv, blocks
+def cry(text:str, password:str) -> bytes:
+    from Crypto.Cipher import AES
+    from Crypto.Hash import SHA256
+    from Crypto.Random import get_random_bytes
+
+    if type(text) == str:
+        t = text.encode()
+    else:
+        t = text
+
+    p = password.encode()
+
+    i = get_random_bytes(16)
+    k = SHA256.new(i+p).digest()
+
+    n = hex(len(t))[2:]
+    n = "0" * (8-len(n)) + n
+    s = bytes.fromhex(n)
+
+    f = 32 - len(t) % 32
+    if f < 32:
+        t = t + b'\x00'*f
+
+    cipher = AES.new(k, AES.MODE_CBC, iv=i)
+    b = cipher.encrypt(t)
+
+    return s+i+b
+
+
+def decry(byte:bytes, password:str, bin=False) -> str:
+    from Crypto.Cipher import AES
+    from Crypto.Hash import SHA256
+
+    s = byte[0:4]
+    i = byte[4:20]
+    b = byte[20:]
+
+    p = password.encode()
+    k = SHA256.new(i+p).digest()
+    cipher = AES.new(k, AES.MODE_CBC, iv=i)
+    t = cipher.decrypt(b)
+
+    n = int(s.hex(), 16)
+
+    if bin:
+        return t[:n]
+    return t[:n].decode()
+
+def getch():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
+
+def get_pw():
+    w,h = os.get_terminal_size()
+    so = sys.stdout.write
+    so(f'\033[?25l\033[1J\033[{randint(0,1)};{[3,9][randint(0,1)]}{randint(2,6)}m')
+    so(' '+'─'*(w-2)+' \r\t Password \n')
+    so('  _')
+    sys.stdout.flush()
+    pw = ''
+    while True:
+        ch = getch()
+        if ch in '\r\n\0':
+            break
+        if ch == '\x7F':
+            if pw:
+                pw = pw[:-1]
+                so('\033[3D\033[0K_')
+                sys.stdout.flush()
+            continue
+        so('\b□ _')
+        sys.stdout.flush()
+        pw += ch
+    so(f'\r  {"✘"*(w-4)}  \033[?25h\033[0m\n')
+    return pw
+
+
 def main():
     kia()
 
+
 if __name__ == "__main__":
     main()
+
+
+
