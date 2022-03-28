@@ -8,7 +8,24 @@ plugins=(
   burl
 )
 
+function def(){
+  local ext="${1##*.}"
+
+  local name="${1%%.${ext}}"
+  if [ ! -z "$2" ]; then
+    name="$2"
+  fi
+
+  if [ "$ext" == 'py' ]; then
+    alias $name="python $(realpath \"$1\")"
+  elif [ "$ext" == 'sh' ]; then
+    alias $name="zsh $(realpath \"$1\")"
+  fi
+}
+
 alias vi='nvim --noplugin -n'
 alias vim='nvim -n'
+export EDITOR=nvim
+
 
 #export TERM=screen-256color
