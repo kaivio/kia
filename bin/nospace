@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+
+f=`echo "$*" | sed 's/\s//g' | sed 's/内部存储/\/sdcard/g'`
+
+echo "$f"
+
+export $f
+

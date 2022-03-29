@@ -64,3 +64,24 @@ kia~
 
 还是标准库的`argpaser`好用
 
+-----------------------
+*Tue Mar 29 05:21:59 2022*
+
+ `etc/rc.local  -rwxr-xr-x`
+
+
+```sh
+sudo systemctl enable rc-local.service
+```
+-----------------------
+*Tue Mar 29 11:07:09 2022*
+
+```sh
+export ALL_PROXY=socks5://127.0.0.1:1080
+
+export http_proxy="http://usrname:passwrd@host:port"
+export https_proxy="http://usrname:passwrd@host:port"
+
+```
+
+

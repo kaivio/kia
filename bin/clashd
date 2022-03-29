@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+
+source /etc/clash/env
+
+if [ -z "$1" ]; then
+  (clash -f "$CLASH_CONFIG") &
+elif [ "$1" == '-s' ]; then
+  killall clash
+elif [ "$1" == '-r' ]; then
+  killall clash
+  (clash -f "$CLASH_CONFIG") &
+elif [ "$1" == '-u' ]; then
+  if [ ! -z "$CLASH_CONFIG_URL" ]; then
+    curl -fSL "$CLASH_CONFIG_URL" -o "$CLASH_CONFIG"
+  else
+    echo unset CLASH_CONFIG_URL
+  fi
+fi
+
