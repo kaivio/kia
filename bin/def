@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-
-name="$1"
-shift
-alias $name="$*"
-export $name="$*"

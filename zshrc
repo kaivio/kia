@@ -3,8 +3,10 @@
 alias vi='nvim --noplugin -n'
 alias vim='nvim -n'
 export EDITOR=nvim
-
 #export TERM=screen-256color
+
+alias wb='python3 ~/app/word-book/main.py'
+
 ZSH_THEME=robbyrussell
 plugins=(
   git
